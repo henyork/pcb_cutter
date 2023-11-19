@@ -2,8 +2,8 @@ from gcodeparser import GcodeParser, GcodeLine
 
 
 distance = 10
-wiggle_interval = .005
-angle_variation = 16
+wiggle_interval = .01
+angle_variation = 4
 
 num_wiggles = distance/wiggle_interval
 
@@ -21,7 +21,7 @@ while(i < num_wiggles):
 lines.append(GcodeLine(command=('G', 1), params={'Z':1,'A':90, 'F':2000},comment='Lift'))
 
 
-f_new = open('Z:/G-Code/wiggle_line.ngc','w')
+f_new = open('Z:/G-Code/vertical_wiggle_test/wiggle_line.ngc','w')
 
 for line in lines:
     f_new.write(line.gcode_str)

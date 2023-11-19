@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # open gcode file and store contents as variable
-with open('Z:/G-Code/test_square_diag_offset.ngc', 'r') as f:
+
+#source_file = 'Z:/G-Code/small_test_square_diag_offset.ngc'
+source_file = 'Z:/G-Code/front_noffset.ngc'
+with open(source_file, 'r') as f:
     gcode = f.read()
     
 remove_offset = False
