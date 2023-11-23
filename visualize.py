@@ -7,12 +7,12 @@ import numpy as np
 # open gcode file and store contents as variable
 
 #source_file = 'Z:/G-Code/small_test_square_diag_offset.ngc'
-source_file = 'Z:/G-Code/front_noffset.ngc'
+source_file = 'Z:/G-Code/front_offset.ngc'
 with open(source_file, 'r') as f:
     gcode = f.read()
     
-remove_offset = False
-offset_width = .5
+remove_offset = True
+offset_width = .35
 
 
 lines = GcodeParser(gcode).lines    # get parsed gcode lines

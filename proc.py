@@ -289,7 +289,7 @@ def add_wiggle(lines,mill_depth_list, wiggle_interval_list, angle_variation_list
                 diff_a = angle - prev_angle
                 if(diff_x != 0 or diff_y !=0):
                     distance = math.dist([x,y],[prev_x,prev_y])
-
+                    
                     wiggle_num = round(distance / wiggle_interval)
                     if(wiggle_num == 0):
                         wiggle_num = 1

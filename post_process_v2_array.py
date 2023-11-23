@@ -8,7 +8,7 @@ normal_mill_depth_list = [-.1]
 normal_angle_variation_list = [40]
 
 
-mill_depth_list = [-.1]
+mill_depth_list = [-.15]
 
 override_depth = True
 
@@ -22,9 +22,10 @@ array_interval = 5
 
 #source_file = '../gerber/small_test_square_diag.ngc'
 #source_file = '../led_test_pcb/front-reversed.ngc'
-#source_file = '../led_test_pcb/front.ngc'
+source_file = '../led_test_pcb/front.ngc'
 #source_file = '../small_test_pcb/front.ngc'
-source_file = '../gerber/front.ngc'
+#source_file = '../small_test_pcb2/front.ngc'
+#source_file = '../gerber/front.ngc'
 output_dir = 'Z:/G-Code/'
 
 base_name = proc.get_base_name(source_file)
