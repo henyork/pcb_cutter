@@ -200,7 +200,7 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                 if lift_flag == True and twist_flag == False:
                         #insert lift + angle change
                         
-                        #these go in in reverse order
+                        
                         lines[i] = GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle,5)},comment = comment)
                         lines.insert(i+1, GcodeLine(command=('G', 1), params={'Z':z_lift, 'F':20000},comment = comment))
                         lines.insert(i+2, GcodeLine(command=('G', 0), params={'A':angle},comment = comment))
@@ -212,7 +212,7 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                 if lift_flag == True and twist_flag == True:
                         #insert lift + angle change
                         
-                        #these go in in reverse order
+                        
                         lines[i] = GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle,5)},comment = comment)
                         lines.insert(i+1, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':20000},comment = comment))
 
