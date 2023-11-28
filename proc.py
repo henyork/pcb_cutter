@@ -416,7 +416,26 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
             except IndexError:
                 print("Didn't pop: ",i)
                 pass
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
             print(i)
+        if lines[i].command == ('G', 4):
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
+            print(i)
+            
             
 
         i+=1

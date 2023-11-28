@@ -23,8 +23,11 @@ array_interval = 0
 #source_file = '../gerber/small_test_square_diag.ngc'
 #source_file = '../led_test_pcb/front-reversed.ngc'
 #source_file = '../led_test_pcb/front.ngc'
+#source_file = '../led_test_pcb/front.ngc'
 #source_file = '../small_test_pcb/front.ngc'
 #source_file = '../small_test_pcb2/front.ngc'
+source_file = '../gerber/front.ngc'
+#source_file = '../stopwatch/front.ngc'
 source_file = '../gerber/front.ngc'
 #source_file = '../stopwatch/front.ngc'
 output_dir = 'Z:/G-Code/'
@@ -42,6 +45,7 @@ proc.save_file(lines,output_dir,base_name,"_noffset.ngc")
 normal_lines = deepcopy(lines)
 lines = proc.add_offsets(lines,offset_list)
 #lines = proc.add_spin(lines,mill_depth_list)
+#lines = proc.add_spin(lines,mill_depth_list)
 proc.save_file(lines,output_dir,base_name,"_offset.ngc")
 
 straight_lines = deepcopy(lines)
@@ -56,4 +60,5 @@ proc.save_file(lines,output_dir,base_name,"_wiggle.ngc")
 normal_lines = proc.add_vertical_offset(normal_lines, vertical_offset, normal_mill_depth_list)
 normal_lines = proc.normal(normal_lines, normal_offset_list,normal_mill_depth_list, normal_angle_variation_list)
 proc.save_file(normal_lines,output_dir,base_name,"_normal.ngc")
+
 
