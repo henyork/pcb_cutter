@@ -266,7 +266,7 @@ def add_wiggle(lines,mill_depth_list, wiggle_interval_list, angle_variation_list
                 y = lines[i].get_param('Y')
                 angle = lines[i].get_param('A')
                 comment = lines[i].comment
-                if lines[i].comment != None:
+                if lines[i].comment != "" and lines[i].comment != None:
                     rep_num = int(lines[i].comment)
                     try:
                         mill_depth = mill_depth_list[rep_num]
@@ -353,7 +353,8 @@ def multiply(lines, count, interval):
                 x = line.get_param('X')
                 new_line.params['X'] = x + interval*i
                 new_line.comment = str(i)
-            new_lines.append(deepcopy(new_line))
+            if line.command != ('M',2):
+                new_lines.append(deepcopy(new_line))
         i+=1
     return start_lines+new_lines
         
@@ -397,11 +398,26 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
                 side1[i].params['Z'] = normal_mill_depth
                 side2[i].params['Z'] = normal_mill_depth
         if lines[i].command == ('M', 2):
-            
-            side1.pop(i)
-            side2.pop(i)
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
             print(i)
-              
+        if lines[i].command == ('G', 4):
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
+            print(i)
+            
 
         i+=1
     i=0
@@ -424,3 +440,50 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
             side2[i].params['Y'] = round(y2,2)
         i+=1
     return side1+side2
+
+def add_spin(lines,mill_depth_list):
+    offset = .37
+    
+    mill_depth = mill_depth_list[0]
+    
+    length = len(lines)
+    i=0
+    while i < length:
+
+        if lines[i].command == ('G',1) and ('Z' in lines[i].params.keys()):
+            if lines[i].get_param('Z') == .2: 
+                if lines[i].comment != None:
+                    rep_num = int(lines[i].comment)
+                    try:
+                        mill_depth = mill_depth_list[rep_num]
+                    except IndexError:
+                        pass
+                spin_depth = mill_depth
+                a_origin = lines[i+2].get_param('A')
+                x_origin = lines[i+2].get_param('X') - offset * math.cos(math.radians(a_origin))
+                y_origin = lines[i+2].get_param('Y') - offset * math.sin(math.radians(a_origin))
+                
+                lines[i+2].params['Z'] = spin_depth
+        
+                j = 0
+                while j < 360:
+                    a = round(a_origin + j,2)
+                    x = round(offset * math.cos(math.radians(a)) + x_origin,2)
+                    y = round(offset * math.sin(math.radians(a)) + y_origin,2)
+                    lines.insert(i+3+j,GcodeLine(command=('G', 1), params={'X':x, 'Y':y, 'A':a},comment = ""))
+                    j+=1
+                j= 0
+                while j < 360:
+                    a = round(a_origin + 359 - j,2)
+                    x = round(offset * math.cos(math.radians(a)) + x_origin,2)
+                    y = round(offset * math.sin(math.radians(a)) + y_origin,2) 
+                    lines.insert(i+3+360+j,GcodeLine(command=('G', 1), params={'X':x, 'Y':y,'A':a},comment = ""))
+                    j+=1
+                x = round(offset * math.cos(math.radians(a_origin)) + x_origin,2)
+                y = round(offset * math.sin(math.radians(a_origin)) + y_origin,2) 
+                lines.insert(i+3+360*2,GcodeLine(command=('G', 1), params={'X':x, 'Y':y,'Z':mill_depth,'A':a_origin},comment = ""))
+                i+=360*2
+                length += 360*2
+        i+=1
+
+    return lines
