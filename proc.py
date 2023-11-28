@@ -397,8 +397,8 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
         if 'Z' in lines[i].params.keys():
             z = lines[i].get_param('Z')
             if(z < 0):
-                side1[i].params['Z'] = normal_mill_depth
-                side2[i].params['Z'] = normal_mill_depth
+                side1[i].params['Z'] = lines[i].get_param('Z')
+                side2[i].params['Z'] = lines[i].get_param('Z')
         if lines[i].command == ('M', 2):
             try:
                 side1.pop(i)
@@ -418,7 +418,26 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
             except IndexError:
                 print("Didn't pop: ",i)
                 pass
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
             print(i)
+        if lines[i].command == ('G', 4):
+            try:
+                side1.pop(i)
+                side2.pop(i)
+                lines.pop(i)
+                i-=1
+            except IndexError:
+                print("Didn't pop: ",i)
+                pass
+            print(i)
+            
             
 
         i+=1
@@ -488,4 +507,27 @@ def add_spin(lines,mill_depth_list):
                 length += 360*2
         i+=1
 
+    return lines
+
+def add_vertical_offset(lines, vertical_offset,mill_depth_list):
+    mill_depth = mill_depth_list[0]
+    length = len(lines)
+    i=0
+    while i<length:
+
+        try:
+            rep_num = int(lines[i].comment)
+            try:
+                mill_depth = mill_depth_list[rep_num]
+            except IndexError:
+                pass
+        except ValueError:
+            rep_num = 0 
+            pass
+        if lines[i].command == ('G',1) and 'A' in lines[i].params.keys():
+            a = lines[i].get_param('A')
+            z = round(mill_depth + vertical_offset *math.sin(math.radians(a)),2)
+            lines[i].params['Z']= z
+            
+        i+=1
     return lines
