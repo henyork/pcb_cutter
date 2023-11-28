@@ -8,14 +8,14 @@ normal_mill_depth_list = [-.08]
 normal_angle_variation_list = [20]
 
 
-mill_depth_list = [-.1]
+mill_depth_list = [-.08]
 
 override_depth = True
 
 extend_length_list = [0]
 
 wiggle_interval_list = [.1]
-angle_variation_list = [18]
+angle_variation_list = [6]
 
 array_num = 1
 array_interval = 0

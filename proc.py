@@ -300,12 +300,14 @@ def add_wiggle(lines,mill_depth_list, wiggle_interval_list, angle_variation_list
                     
                     step_a = diff_a / wiggle_num
                     while(c < wiggle_num):
-                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-(angle_variation)/2+(c%2)*angle_variation,2), 'F':100000},comment = comment))
+                        #lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-(angle_variation)/2+(c%2)*angle_variation,2), 'F':100000},comment = comment))
+                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c+angle_variation/2,2), 'F':100000},comment = comment))
+                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-angle_variation/2), 'F':100000},comment = comment))
                         c+=1
 
         
-        lines_added += wiggle_num
-        i+=wiggle_num
+        lines_added += 2*wiggle_num
+        i+=2*wiggle_num
         i+=1
         print("Through line:", i)
         print("List is :",len(lines))
