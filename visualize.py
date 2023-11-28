@@ -37,10 +37,10 @@ while i < initial_len-1:
                 a1 = lines[i].get_param('A')
                 a2 = lines[i+1].get_param('A')
 
-                x1-= .55*math.cos(math.radians(a1))
-                y1-= .55*math.sin(math.radians(a1))
-                x2-= .55*math.cos(math.radians(a2))
-                y2-= .55*math.sin(math.radians(a2))
+                x1-= offset_width*math.cos(math.radians(a1))
+                y1-= offset_width*math.sin(math.radians(a1))
+                x2-= offset_width*math.cos(math.radians(a2))
+                y2-= offset_width*math.sin(math.radians(a2))
 
             x_mid = (x1+x2)/2
             y_mid = (y1+y2)/2
