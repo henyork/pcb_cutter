@@ -17,6 +17,27 @@ def load_gcode(source_file):
     lines = GcodeParser(gcode).lines    # get parsed gcode lines
     return lines
 
+def split_tools(lines, tool_split_line_1, tool_split_line_2):
+    delete_flag = False
+    length = len(lines)
+    i=0
+    deleted=0
+    while i<len(lines):
+        if lines[i].command == ('M',6):
+            if delete_flag == True:
+                delete_flag = False
+            else: 
+                delete_flag = True
+        if delete_flag == True: 
+            lines.pop(i)
+            deleted +=1 
+            #7print("Deleted")
+        else:
+            i+=1
+    return lines
+
+
+
 def add_a(lines, mill_depth_list, extend_length_list, override_depth):
 
     #Add an A paramater to each X or Y Move
@@ -108,7 +129,7 @@ def add_a(lines, mill_depth_list, extend_length_list, override_depth):
                 if(lines[i+j].command == ('G', 1) and ('X' in lines[i+j].params.keys() or 'Y' in lines[i+j].params.keys())):
                     angle = lines[i+j].get_param('A')
                     lines[i].update_param('A',angle)
-                    print("Updated a G0 on line ", i , " ", angle)
+                    #print("Updated a G0 on line ", i , " ", angle)
                     exit_flag = True
                 j+=1
             j=0
@@ -138,7 +159,7 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                     except IndexError:
                         pass
                     try:
-                         mill_depth = mill_depth_list[0]
+                         mill_depth = mill_depth_list[rep_num]
                     except IndexError:
                         pass
                 prev_angle= lines[i-1].get_param('A')
@@ -157,11 +178,14 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                 x_change = x-prev_x
                 y_change = y-prev_y
 
-                x_extend = round(x_change * extend_length/length,3)
-                y_extend = round(y_change * extend_length/length,3)
+                #x_extend = round(x_change * extend_length/length,3)
+                #y_extend = round(y_change * extend_length/length,3)
+                x_extend = 0
+                y_extend = 0
                 
                 next_x_extend = 0
                 next_y_extend = 0
+                next_length = 0
                 if lines[i+1].command == ('G', 1) and ('X' in lines[i+1].params.keys() or 'Y' in lines[i+1].params.keys()):
                     next_angle = lines[i+1].get_param('A')
 
@@ -174,27 +198,34 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                     next_x_change = next_x-x
                     next_y_change = next_y-y
 
-                    next_x_extend = round(next_x_change * extend_length/next_length,3)
-                    next_y_extend = round(next_y_change * extend_length/next_length,3)
-
+                    #next_x_extend = round(next_x_change * extend_length/next_length,3)
+                    #next_y_extend = round(next_y_change * extend_length/next_length,3)
+                    next_x_extend = 0
+                    next_y_extend = 0
                     
                     next_change = next_angle - angle
-                    if lines[i].get_param('X') == 5.39722:
-                        print("break")
+                    
                 prev_change = angle - prev_angle
                 z_lift = .2
                 twist_flag = False
                 comment = lines[i].comment
                 if lines[i+1].command == ('G', 4):
                     lift_flag = False
-                    print('Skip bc G4')
-                if abs(prev_change) > 20: 
+                    #print('Skip bc G4')
+                if abs(prev_change) > 20 or length > .5: 
                     lift_flag = True
-                    if abs(prev_change) < 91:
+                    if abs(prev_change) < 190:
                         twist_flag = True
                 else:
                     lift_flag = False
                 
+
+
+                if next_length > .5: 
+                    overshoot = False
+                    #print("overshoot")
+                else:
+                    overshoot = False
 
                 
                 if lift_flag == True and twist_flag == False:
@@ -202,9 +233,9 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                         
                         
                         lines[i] = GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle,5)},comment = comment)
-                        lines.insert(i+1, GcodeLine(command=('G', 1), params={'Z':z_lift, 'F':20000},comment = comment))
+                        lines.insert(i+1, GcodeLine(command=('G', 1), params={'Z':z_lift, 'F':2000},comment = comment))
                         lines.insert(i+2, GcodeLine(command=('G', 0), params={'A':angle},comment = comment))
-                        lines.insert(i+3, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':20000},comment = comment))
+                        lines.insert(i+3, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':500000},comment = comment))
 
                         lines_added +=3
 
@@ -213,14 +244,54 @@ def add_lifts(lines, extend_length_list, mill_depth_list):
                         #insert lift + angle change
                         
                         
-                        lines[i] = GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle,5)},comment = comment)
-                        lines.insert(i+1, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':20000},comment = comment))
+                        lines[i] = GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle,5), 'Z':mill_depth},comment = comment)
 
-                        lines_added +=1
+                        if overshoot == False:
+                            
+                            angle_change = angle - prev_angle
 
-                        i+=1
+                            num_steps = abs(int(angle_change / 10))
 
-        i+=1
+                            c=1
+                            while(c <= num_steps):
+                                
+                                step_angle = angle_change * c/num_steps
+                                lines.insert(i+c, GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle+step_angle,5),'Z': mill_depth, 'F':500000},comment = comment))
+                                #print("Added lines on line:" + str(i+c) + " c= " + str(c) + " i=" + str(i) + " num_steps= " + str(num_steps))
+                                
+                                c+=1
+
+                            lines.insert(i+num_steps+1, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':500000},comment = comment))
+                            lines_added+=(1+num_steps)
+                            #print("i before:" + str(i))
+                            i+=(1+num_steps)
+                            #print("i after:" + str(i))
+
+                        if overshoot == True:
+                            if(angle-prev_angle) < 0: 
+                                angle_change_direction = -1
+                            else: 
+                                angle_change_direction = 1
+                            extra_angle_change = 360 * angle_change_direction
+                            num_extra_steps = 180
+                            c = 1
+                            while(c <= num_extra_steps):
+                                step_angle = extra_angle_change * c/num_extra_steps
+                                lines.insert(i+c, GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(prev_angle+step_angle,5),'Z': mill_depth, 'F':21300},comment = comment))
+                                c+=1
+
+                            current_angle = prev_angle + extra_angle_change 
+                            angle_change = angle - current_angle 
+                            num_steps = abs(int(angle_change / 2))
+                            j=1
+                            while(j <= num_steps):
+                                step_angle = angle_change * j/num_steps
+                                lines.insert(i+j+num_extra_steps, GcodeLine(command=('G', 1), params={'X':x+x_extend, 'Y':y+y_extend, 'A':round(current_angle+step_angle,5),'Z': mill_depth, 'F':21300},comment = comment))
+                                j+=1
+                            lines.insert(i+num_extra_steps+num_steps+1, GcodeLine(command=('G', 1), params={'X':x-next_x_extend, 'Y':y-next_y_extend, 'A':round(angle,5),'Z': mill_depth, 'F':21300},comment = comment))  
+                            lines_added+=(1+num_steps+num_extra_steps)
+                            i+=(1+num_steps+num_extra_steps)
+        i+=1                
     return lines   
 
 
@@ -300,17 +371,16 @@ def add_wiggle(lines,mill_depth_list, wiggle_interval_list, angle_variation_list
                     
                     step_a = diff_a / wiggle_num
                     while(c < wiggle_num):
-                        #lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-(angle_variation)/2+(c%2)*angle_variation,2), 'F':100000},comment = comment))
-                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c+angle_variation/2,2), 'F':100000},comment = comment))
-                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-angle_variation/2), 'F':100000},comment = comment))
+                        lines.insert(i, GcodeLine(command=('G', 1), params={'X':round(x - step_x*c,2), 'Y':round(y - step_y*c,2), 'A':round(angle-step_a*c-(angle_variation)/2+(c%2)*angle_variation,2), 'F':500000},comment = comment))
+                        
                         c+=1
 
         
-        lines_added += 2*wiggle_num
-        i+=2*wiggle_num
+        lines_added += wiggle_num
+        i+=wiggle_num
         i+=1
-        print("Through line:", i)
-        print("List is :",len(lines))
+        #print("Through line:", i)
+        #print("List is :",len(lines))
     return lines
 
 
@@ -327,6 +397,20 @@ def save_file(lines, output_dir, base_name, string):
         f_new.write("\n")
 
     f_new.close()
+
+def append_file(lines, output_dir, base_name, string):
+
+
+    full_file = os.path.join(output_dir,base_name+string)
+
+    f_new = open(full_file,'a')
+
+    for line in lines:
+        f_new.write(line.gcode_str)
+        f_new.write("\n")
+
+    f_new.close()
+
 
 def multiply(lines, count, interval):
     i = 0
@@ -346,9 +430,7 @@ def multiply(lines, count, interval):
     new_lines = []
     i = 0 
     while i<count:
-        if(i == 1):
-            print("breakpoint reached")
-            
+        
         for line in rep_lines:
             new_line = deepcopy(line)
             if 'X' in line.params.keys():
@@ -362,8 +444,8 @@ def multiply(lines, count, interval):
         
 def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_variation_list):
     normal_offset = normal_offset_list[0]
-    normal_offset = normal_mill_depth_list[0]
-    normal_offset = normal_angle_variation_list[0]
+    normal_mill_depth = normal_mill_depth_list[0]
+    normal_angle_variation = normal_angle_variation_list[0]
     #Add offsets
 
     for line in lines:
@@ -397,8 +479,8 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
         if 'Z' in lines[i].params.keys():
             z = lines[i].get_param('Z')
             if(z < 0):
-                side1[i].params['Z'] = lines[i].get_param('Z')
-                side2[i].params['Z'] = lines[i].get_param('Z')
+                side1[i].params['Z'] = normal_mill_depth
+                side2[i].params['Z'] = normal_mill_depth
         if lines[i].command == ('M', 2):
             try:
                 side1.pop(i)
@@ -406,9 +488,10 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
                 lines.pop(i)
                 i-=1
             except IndexError:
-                print("Didn't pop: ",i)
+                
                 pass
-            print(i)
+            #print(i)
+    
         if lines[i].command == ('G', 4):
             try:
                 side1.pop(i)
@@ -416,33 +499,15 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
                 lines.pop(i)
                 i-=1
             except IndexError:
-                print("Didn't pop: ",i)
+                #print("Didn't pop: ",i)
                 pass
-            try:
-                side1.pop(i)
-                side2.pop(i)
-                lines.pop(i)
-                i-=1
-            except IndexError:
-                print("Didn't pop: ",i)
-                pass
-            print(i)
-        if lines[i].command == ('G', 4):
-            try:
-                side1.pop(i)
-                side2.pop(i)
-                lines.pop(i)
-                i-=1
-            except IndexError:
-                print("Didn't pop: ",i)
-                pass
-            print(i)
+            #print("Popped i:" + str(i))
             
             
 
         i+=1
     i=0
-    print(normal_offset)
+    #print(normal_offset)
     while i<len(lines):
         if 'X' in lines[i].params.keys() or 'Y' in lines[i].params.keys():
             a1 = side1[i].get_param('A')
@@ -461,6 +526,7 @@ def normal(lines, normal_offset_list, normal_mill_depth_list, normal_angle_varia
             side2[i].params['Y'] = round(y2,2)
         i+=1
     return side1+side2
+    
 
 def add_spin(lines,mill_depth_list):
     offset = .37
@@ -526,7 +592,11 @@ def add_vertical_offset(lines, vertical_offset,mill_depth_list):
             pass
         if lines[i].command == ('G',1) and 'A' in lines[i].params.keys():
             a = lines[i].get_param('A')
-            z = round(mill_depth + vertical_offset *math.sin(math.radians(a)),2)
+            if math.sin(math.radians(a)) > 0:
+                z = mill_depth + vertical_offset*math.sin(math.radians(a))
+            else:
+                z = mill_depth 
+            
             lines[i].params['Z']= z
             
         i+=1

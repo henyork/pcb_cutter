@@ -7,7 +7,8 @@ import numpy as np
 # open gcode file and store contents as variable
 
 #source_file = 'Z:/G-Code/small_test_square_diag_offset.ngc'
-source_file = 'Z:/G-Code/front_offset.ngc'
+source_file = 'Z:/nas/G-Code/front_straight.ngc'
+#source_file = 'Z:/G-Code/back_straight.ngc'
 with open(source_file, 'r') as f:
     gcode = f.read()
     
@@ -17,7 +18,7 @@ offset_width = .35
 
 lines = GcodeParser(gcode).lines    # get parsed gcode lines
 
-arrow_length = .2
+arrow_length = .05
 
 initial_len = len(lines)
 i = 0 
